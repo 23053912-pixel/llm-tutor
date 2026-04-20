@@ -53,6 +53,9 @@ chroma_data/
 .ipynb_checkpoints/
 *.ipynb
 
+# EXCEPT: Include Agentic AI course material notebooks
+!Agentic*/**/*.ipynb
+
 # Node (if frontend)
 node_modules/
 npm-debug.log

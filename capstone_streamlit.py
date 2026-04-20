@@ -242,7 +242,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### ✅ Status")
     
-    if st.session_state.groq_api_key:
+    if api_key:
         st.success("✅ API Key Configured\n\nReady to use!")
     else:
         st.error("❌ API Key Missing\n\nPlease set GROQ_API_KEY in .env file")
@@ -266,7 +266,7 @@ def process_query(prompt):
         st.markdown(prompt)
 
     with st.chat_message("assistant", avatar="🤖"):
-        if not st.session_state.groq_api_key:
+        if not api_key:
             st.error("❌ Please configure your GROQ API Key.")
         elif not app:
             st.error("❌ Failed to initialize AI system.")

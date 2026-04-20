@@ -1,34 +1,36 @@
 import streamlit as st
 import os
+import sys
 import uuid
 from datetime import datetime, timezone, timedelta
 
-# Load API key from Streamlit secrets (or fallback to environment for local .env)
-api_key = ""
-try:
-    # First try Streamlit secrets (for deployed apps)
-    api_key = st.secrets.get("GROQ_API_KEY", "")
-except Exception:
-    pass
+# ─── Load API Key ───
+# First try .env file in current directory
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
+api_key = os.environ.get('GROQ_API_KEY', '')
+
+# Fallback to Streamlit secrets if running on cloud
 if not api_key:
-    # Fallback to environment variable (for local .env)
     try:
-        from dotenv import load_dotenv
-        load_dotenv()
-        api_key = os.environ.get('GROQ_API_KEY', '')
-    except Exception:
+        api_key = st.secrets.get("GROQ_API_KEY", "")
+    except:
         pass
 
-# Set the API key to environment for downstream use
+# Ensure API key is available for all imports
 if api_key:
     os.environ['GROQ_API_KEY'] = api_key
 
+# Now import dependencies
 from agent import create_agent
 from kb_data import documents
 import chromadb
 from langchain_groq import ChatGroq
 from sentence_transformers import SentenceTransformer
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
+from langchain_core.messages import HumanMessage, AIMessage
 
 # ─── Page Config ───
 st.set_page_config(
@@ -221,46 +223,57 @@ st.markdown("""
 @st.cache_resource
 def load_system():
     """Load the AI system once and cache it"""
-    api_key = os.environ.get('GROQ_API_KEY', '')
-    if not api_key:
-        return None, len(documents)
-    
-    # Load embedder once
-    embedder = SentenceTransformer('all-MiniLM-L6-v2')
-
-    # Create ChromaDB client
-    chroma_client = chromadb.Client()
     try:
-        chroma_client.delete_collection(name="course_kb")
-    except Exception:
-        pass
-    collection = chroma_client.create_collection(name="course_kb")
-
-    # Prepare data
-    texts = [doc['text'] for doc in documents]
-    ids = [doc['id'] for doc in documents]
-    metadatas = [{'topic': doc['topic']} for doc in documents]
-    embeddings = embedder.encode(texts).tolist()
-
-    # Add to collection
-    collection.add(
-        documents=texts,
-        embeddings=embeddings,
-        metadatas=metadatas,
-        ids=ids
-    )
-
-    # Initialize LLM
-    try:
-        llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=api_key)
+        api_key_check = os.environ.get('GROQ_API_KEY', '')
+        if not api_key_check:
+            st.error("⚠️ GROQ_API_KEY not configured")
+            return None, len(documents), None, None
+        
+        # Load embedder
+        embedder = SentenceTransformer('all-MiniLM-L6-v2')
+        
+        # Create ChromaDB
+        chroma_client = chromadb.Client()
+        try:
+            chroma_client.delete_collection(name="course_kb")
+        except:
+            pass
+        collection = chroma_client.create_collection(name="course_kb")
+        
+        # Load documents
+        texts = [doc['text'] for doc in documents]
+        ids = [doc['id'] for doc in documents]
+        metadatas = [{'topic': doc['topic']} for doc in documents]
+        
+        # Generate embeddings
+        embeddings = embedder.encode(texts).tolist()
+        
+        # Add to ChromaDB
+        collection.add(
+            documents=texts,
+            embeddings=embeddings,
+            metadatas=metadatas,
+            ids=ids
+        )
+        
+        # Initialize LLM
+        llm = ChatGroq(
+            model="llama-3.3-70b-versatile",
+            temperature=0,
+            api_key=api_key_check
+        )
+        
+        # Create agent
+        app = create_agent(llm, embedder, collection)
+        
+        return app, len(documents), embedder, collection
+        
     except Exception as e:
-        st.error(f"Failed to initialize GROQ API: {str(e)}")
-        return None, len(documents)
+        st.error(f"❌ System initialization error: {str(e)}")
+        return None, len(documents), None, None
 
-    app = create_agent(llm, embedder, collection)
-    return app, len(documents)
 
-app, kb_count = load_system()
+app, kb_count, embedder, collection = load_system()
 
 # ─── Session State ───
 if 'thread_id' not in st.session_state:

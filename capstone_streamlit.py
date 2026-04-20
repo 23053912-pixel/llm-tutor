@@ -60,7 +60,7 @@ if not api_key:
     """)
     st.stop()
 
-# ─── Custom CSS to match the dark premium UI ───
+# ─── Custom CSS for Study & Focus Friendly Theme ───
 st.markdown("""
 <style>
     /* Hide default Streamlit elements */
@@ -68,18 +68,24 @@ st.markdown("""
     header {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Dark background */
+    /* Light background - study friendly */
     .stApp {
-        background-color: #0f1117;
+        background-color: #f8f9fa;
     }
 
-    /* Hero gradient card */
+    /* Main container */
+    .main {
+        background-color: #ffffff;
+    }
+
+    /* Hero card - soft and professional */
     .hero-card {
-        background: linear-gradient(135deg, #1a5c4c 0%, #2d8b74 30%, #c96b3c 70%, #d4845a 100%);
-        border-radius: 16px;
-        padding: 28px 32px;
+        background: linear-gradient(135deg, #4a6fa5 0%, #7ba3c0 100%);
+        border-radius: 12px;
+        padding: 24px 28px;
         margin-bottom: 24px;
         color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     .hero-card h1 {
         font-size: 28px;
@@ -90,14 +96,10 @@ st.markdown("""
     .hero-card p {
         font-size: 14px;
         margin: 4px 0;
-        color: rgba(255,255,255,0.9);
-    }
-    .hero-card .deadline {
-        font-weight: 600;
-        color: #ffe0c0;
+        color: rgba(255,255,255,0.95);
     }
 
-    /* Suggestion cards row */
+    /* Suggestion cards - clean and minimal */
     .suggestion-row {
         display: flex;
         gap: 12px;
@@ -105,48 +107,112 @@ st.markdown("""
     }
     .suggestion-card {
         flex: 1;
-        background: linear-gradient(135deg, #1a3a4a 0%, #1a4a3a 50%, #3a2a1a 100%);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 12px;
+        background: linear-gradient(135deg, #e8f0f7 0%, #f0f5fa 100%);
+        border: 2px solid #cbd5e0;
+        border-radius: 10px;
         padding: 16px;
         cursor: pointer;
-        transition: transform 0.2s, border-color 0.2s;
+        transition: all 0.2s ease;
     }
     .suggestion-card:hover {
         transform: translateY(-2px);
-        border-color: rgba(255,255,255,0.2);
+        border-color: #4a6fa5;
+        box-shadow: 0 4px 12px rgba(74, 111, 165, 0.15);
+        background: linear-gradient(135deg, #dfe8f5 0%, #e8f0fa 100%);
     }
     .suggestion-card h3 {
         font-size: 14px;
         font-weight: 600;
-        color: #e0e0e0;
+        color: #2d3748;
         margin: 0 0 6px 0;
     }
     .suggestion-card p {
         font-size: 12px;
-        color: #888;
+        color: #718096;
         margin: 0;
     }
 
-    /* Sidebar styling */
+    /* Sidebar styling - clean and readable */
     section[data-testid="stSidebar"] {
-        background-color: #161b22;
-        border-right: 1px solid #21262d;
+        background-color: #f8f9fa;
+        border-right: 1px solid #e2e8f0;
     }
     section[data-testid="stSidebar"] .stMarkdown h1,
     section[data-testid="stSidebar"] .stMarkdown h2,
     section[data-testid="stSidebar"] .stMarkdown h3 {
-        color: #e6edf3;
+        color: #2d3748;
     }
     section[data-testid="stSidebar"] .stMarkdown p,
     section[data-testid="stSidebar"] .stMarkdown li {
-        color: #8b949e;
+        color: #4a5568;
     }
 
-    /* Trace expander styling */
+    /* Chat messages - readable and clean */
+    .stChatMessage {
+        background-color: #ffffff;
+    }
+
+    /* Text styling for better readability */
+    body, p, li, div {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        letter-spacing: 0.3px;
+    }
+
+    /* Links - soft blue */
+    a {
+        color: #4a6fa5 !important;
+        text-decoration: none;
+    }
+    a:hover {
+        color: #2d4058 !important;
+        text-decoration: underline;
+    }
+
+    /* Code blocks - soft background */
+    code {
+        background-color: #f0f4f8 !important;
+        color: #2d3748 !important;
+        border-radius: 4px;
+        padding: 2px 6px;
+    }
+
+    /* Buttons - soft and professional */
+    .stButton > button {
+        background-color: #4a6fa5;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .stButton > button:hover {
+        background-color: #3a5a8f;
+        box-shadow: 0 2px 8px rgba(74, 111, 165, 0.2);
+    }
+
+    /* Alert boxes - soft colors */
+    .stAlert {
+        border-radius: 8px;
+    }
+
+    /* Input fields - clean */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        border: 1px solid #cbd5e0 !important;
+        border-radius: 6px !important;
+        background-color: #ffffff !important;
+        color: #2d3748 !important;
+    }
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: #4a6fa5 !important;
+    }
+
+    /* Expanders - soft styling */
     .streamlit-expanderHeader {
-        font-size: 13px;
-        color: #8b949e;
+        font-size: 14px;
+        color: #2d3748;
+        font-weight: 500;
     }
 </style>
 """, unsafe_allow_html=True)

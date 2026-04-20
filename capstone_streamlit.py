@@ -2,18 +2,25 @@ import streamlit as st
 import os
 import uuid
 from datetime import datetime, timezone, timedelta
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load API key from Streamlit secrets (or fallback to environment for local .env)
+try:
+    # First try Streamlit secrets (for deployed apps)
+    api_key = st.secrets.get("GROQ_API_KEY", "")
+    if not api_key:
+        # Fallback to environment variable (for local .env)
+        from dotenv import load_dotenv
+        load_dotenv()
+        api_key = os.environ.get('GROQ_API_KEY', '')
+except Exception:
+    # If secrets not configured, try .env
+    from dotenv import load_dotenv
+    load_dotenv()
+    api_key = os.environ.get('GROQ_API_KEY', '')
 
-# Initialize session state for API key if not present
-if 'groq_api_key' not in st.session_state:
-    st.session_state.groq_api_key = os.environ.get('GROQ_API_KEY', '')
-
-# Set the API key from session_state to environment
-if st.session_state.groq_api_key:
-    os.environ['GROQ_API_KEY'] = st.session_state.groq_api_key
+# Set the API key to environment for downstream use
+if api_key:
+    os.environ['GROQ_API_KEY'] = api_key
 
 from agent import create_agent
 from kb_data import documents

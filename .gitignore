@@ -42,6 +42,7 @@ build/
 .streamlit/
 .streamlit/cache/
 .streamlit/logs/
+.streamlit/secrets.toml
 streamlit_config.yml
 
 # ChromaDB

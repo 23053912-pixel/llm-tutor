@@ -59,20 +59,34 @@ An AI-powered educational chatbot built with **LangGraph**, **Retrieval-Augmente
    pip install -r requirements.txt
    ```
 
-4. **Configure GROQ API key**
+4. **Configure GROQ API key** (Choose one method)
+
+   **Method 1: Streamlit Secrets (Recommended)**
    ```bash
-   # Create .env file from template
-   cp .env.example .env
+   # Create secrets.toml from template
+   cp .streamlit\secrets.toml.example .streamlit\secrets.toml
    
-   # Edit .env and add your Groq API key (get it from https://console.groq.com)
-   # On Windows, you can use:
+   # Edit the file and add your Groq API key
+   notepad .streamlit\secrets.toml
+   ```
+   
+   Then add your key:
+   ```toml
+   GROQ_API_KEY = "gsk_xxxxxxxxxxxxxxxxxxxxx"
+   ```
+   
+   **Method 2: Environment File (.env)**
+   ```bash
+   cp .env.example .env
    notepad .env
    ```
    
-   The `.env` file should contain:
+   Then add your key:
    ```
-   GROQ_API_KEY=your_api_key_here
+   GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxx
    ```
+
+   Get your free API key from: https://console.groq.com
 
 5. **Run the application**
    ```bash
@@ -188,21 +202,24 @@ User: "How much does it cost to use different LLM APIs?"
 → Provides pricing comparison and optimization tips
 ```
 
+   
+   The API key will be automatically loaded from your `secrets.toml` or `.env` file.
+
 ## ⚙️ Configuration
 
-### Environment Variables
-Create a `.env` file in the project root (use `.env.example` as template):
-```
-GROQ_API_KEY=your_api_key_here        # Required for LLM inference (get from https://console.groq.com)
-```
+### API Key Setup
 
-The API key is automatically loaded when the app starts - no manual setup needed!
+**Streamlit Secrets (Recommended for deployment)**
+- Create `.streamlit/secrets.toml` from `secrets.toml.example`
+- Add your Groq API key
+- Never commit `secrets.toml` to Git (managed by `.gitignore`)
+- Works with Streamlit Cloud deployments
 
-Optional Streamlit settings (in `.streamlit/config.toml`):
-```
-port=8502                             # Change port
-headless=true                         # Run headless (no browser)
-```
+**.env File (For local development)**
+- Create `.env` from `.env.example`  
+- Add your Groq API key
+- Never commit `.env` to Git (managed by `.gitignore`)
+- Fallback if Streamlit Secrets not configured
 
 ### Model Parameters
 Edit `agent.py` to customize:

@@ -80,6 +80,7 @@ config.local.json
 api_keys.txt
 
 # Documentation builds
+docs/
 docs/_build/
 site/
 

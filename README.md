@@ -59,13 +59,19 @@ An AI-powered educational chatbot built with **LangGraph**, **Retrieval-Augmente
    pip install -r requirements.txt
    ```
 
-4. **Set GROQ API key**
+4. **Configure GROQ API key**
    ```bash
-   # Windows (PowerShell)
-   $env:GROQ_API_KEY="your_api_key_here"
+   # Create .env file from template
+   cp .env.example .env
    
-   # Linux/macOS
-   export GROQ_API_KEY="your_api_key_here"
+   # Edit .env and add your Groq API key (get it from https://console.groq.com)
+   # On Windows, you can use:
+   notepad .env
+   ```
+   
+   The `.env` file should contain:
+   ```
+   GROQ_API_KEY=your_api_key_here
    ```
 
 5. **Run the application**
@@ -75,6 +81,8 @@ An AI-powered educational chatbot built with **LangGraph**, **Retrieval-Augmente
 
 6. **Open in browser**
    Navigate to `http://localhost:8502`
+   
+   The API key will be automatically loaded from your `.env` file.
 
 ## 🏗️ Architecture
 
@@ -183,10 +191,17 @@ User: "How much does it cost to use different LLM APIs?"
 ## ⚙️ Configuration
 
 ### Environment Variables
-```bash
-GROQ_API_KEY=your_api_key_here        # Required for LLM inference
-STREAMLIT_SERVER_PORT=8502            # Optional: change port
-STREAMLIT_SERVER_HEADLESS=true        # Optional: run headless
+Create a `.env` file in the project root (use `.env.example` as template):
+```
+GROQ_API_KEY=your_api_key_here        # Required for LLM inference (get from https://console.groq.com)
+```
+
+The API key is automatically loaded when the app starts - no manual setup needed!
+
+Optional Streamlit settings (in `.streamlit/config.toml`):
+```
+port=8502                             # Change port
+headless=true                         # Run headless (no browser)
 ```
 
 ### Model Parameters

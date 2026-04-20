@@ -208,26 +208,12 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
-    st.markdown("### 🔐 API Configuration")
+    st.markdown("### ✅ Status")
     
-    if not st.session_state.groq_api_key:
-        st.warning("⚠️ GROQ API Key not configured")
-        api_key_input = st.text_input("Enter your Groq API Key:", type="password", key="api_key_input")
-        if api_key_input:
-            if api_key_input.startswith('gsk_'):
-                st.session_state.groq_api_key = api_key_input
-                os.environ['GROQ_API_KEY'] = api_key_input
-                st.success("✅ API Key set successfully!")
-                st.rerun()
-            else:
-                st.error("❌ Invalid API key format. Groq keys start with 'gsk_'")
+    if st.session_state.groq_api_key:
+        st.success("✅ API Key Configured\n\nReady to use!")
     else:
-        st.success("✅ API Key configured")
-        if st.button("Change API Key", use_container_width=True):
-            st.session_state.groq_api_key = ''
-            os.environ['GROQ_API_KEY'] = ''
-            st.cache_resource.clear()
-            st.rerun()
+        st.error("❌ API Key Missing\n\nPlease set GROQ_API_KEY in .env file")
 
 # ─── Hero Card ───
 deadline_text = get_deadline_info()

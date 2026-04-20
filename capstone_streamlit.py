@@ -2,6 +2,10 @@ import streamlit as st
 import os
 import uuid
 from datetime import datetime, timezone, timedelta
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize session state for API key if not present
 if 'groq_api_key' not in st.session_state:

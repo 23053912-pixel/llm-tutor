@@ -162,6 +162,8 @@ if 'thread_id' not in st.session_state:
     st.session_state.thread_id = str(uuid.uuid4())[:8]
 if 'messages' not in st.session_state:
     st.session_state.messages = []
+if 'current_trace' not in st.session_state:
+    st.session_state.current_trace = None
 
 # ─── Deadline Countdown ───
 def get_deadline_info():
@@ -246,80 +248,98 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ─── Chat History ───
-for msg in st.session_state.messages:
-    # Use emojis for avatars to match the screenshot vibe
-    avatar = "🤖" if msg['role'] == "assistant" else "🧑‍💻"
-    with st.chat_message(msg['role'], avatar=avatar):
-        st.markdown(msg['content'])
-        if msg['role'] == 'assistant' and 'trace' in msg:
-            with st.expander("Trace"):
-                trace = msg['trace']
-                st.markdown(f"**Route:** `{trace.get('route', 'N/A')}`")
-                st.markdown(f"**Faithfulness Score:** `{trace.get('faithfulness', 'N/A')}`")
-                
-                # Format sources nicely
-                sources = trace.get('sources', [])
-                if sources:
-                    st.markdown("**Sources:**")
-                    for s in sources:
-                        st.markdown(f"- {s}")
-                else:
-                    st.markdown("**Sources:** None")
-                
-                st.markdown(f"**Eval Retries:** `{trace.get('eval_retries', 0)}`")
+# ─── Two Column Layout: Chat + Processing ───
+col_chat, col_process = st.columns([1.2, 1], gap="large")
 
-# ─── Chat Input ───
-if prompt := st.chat_input("Ask me about LLMs, training, evaluation, applications, or future trends..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="🧑‍💻"):
-        st.markdown(prompt)
+with col_chat:
+    st.markdown("### 💬 Conversation")
+    
+    # Chat History
+    chat_container = st.container(height=400)
+    with chat_container:
+        for msg in st.session_state.messages:
+            avatar = "🤖" if msg['role'] == "assistant" else "👤"
+            with st.chat_message(msg['role'], avatar=avatar):
+                st.markdown(msg['content'])
+    
+    # Chat Input
+    st.markdown("---")
+    if prompt := st.chat_input("Ask me about LLMs, training, evaluation, applications, or future trends..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with chat_container:
+            with st.chat_message("user", avatar="👤"):
+                st.markdown(prompt)
 
-    with st.chat_message("assistant", avatar="🤖"):
-        with st.spinner("Looking up information..."):
-            if not st.session_state.groq_api_key:
-                st.error("❌ Please configure your GROQ API Key in the sidebar first.")
-            elif not app:
-                st.error("❌ Failed to initialize the AI system. Please check your API key.")
+        with chat_container:
+            with st.chat_message("assistant", avatar="🤖"):
+                with st.spinner("Processing..."):
+                    if not st.session_state.groq_api_key:
+                        st.error("❌ Please configure your GROQ API Key in settings.")
+                    elif not app:
+                        st.error("❌ Failed to initialize the AI system.")
+                    else:
+                        try:
+                            result = app.invoke(
+                                {"question": prompt},
+                                config={"configurable": {"thread_id": st.session_state.thread_id}}
+                            )
+                            answer = result.get('answer', "I couldn't generate an answer.")
+                            sources = result.get('sources', [])
+
+                            # Display answer without sources in chat
+                            st.markdown(answer)
+
+                            trace_data = {
+                                'route': result.get('route'),
+                                'faithfulness': result.get('faithfulness'),
+                                'sources': sources,
+                                'eval_retries': result.get('eval_retries', 0)
+                            }
+
+                            # Store trace for right panel
+                            st.session_state.current_trace = trace_data
+
+                            st.session_state.messages.append({
+                                "role": "assistant",
+                                "content": answer,
+                                "trace": trace_data
+                            })
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
+
+with col_process:
+    st.markdown("### 🔍 Processing Details")
+    
+    if st.session_state.current_trace or (st.session_state.messages and st.session_state.messages[-1]['role'] == 'assistant'):
+        # Get the latest trace
+        trace = st.session_state.current_trace
+        if not trace and st.session_state.messages:
+            trace = st.session_state.messages[-1].get('trace', {})
+        
+        if trace:
+            st.markdown("#### Information Retrieved")
+            st.info(trace.get('route', 'Processing...'))
+            
+            st.markdown("#### Confidence Score")
+            faithfulness = trace.get('faithfulness', 'N/A')
+            if isinstance(faithfulness, (int, float)):
+                score = min(100, int(faithfulness * 100)) if faithfulness <= 1 else int(faithfulness)
+                st.metric("Faithfulness", f"{score}%")
             else:
-                try:
-                    result = app.invoke(
-                        {"question": prompt},
-                        config={"configurable": {"thread_id": st.session_state.thread_id}}
-                    )
-                    answer = result.get('answer', "I couldn't generate an answer.")
-                    sources = result.get('sources', [])
-
-                    # Build display text with sources
-                    display = answer
-                    if sources:
-                        source_str = "; ".join(sources)
-                        display += f"\n\n*Sources used: {source_str}*"
-
-                    st.markdown(display)
-
-                    trace_data = {
-                        'route': result.get('route'),
-                        'faithfulness': result.get('faithfulness'),
-                        'sources': sources,
-                        'eval_retries': result.get('eval_retries', 0)
-                    }
-
-                    with st.expander("Trace"):
-                        st.markdown(f"**Route:** `{trace_data['route']}`")
-                        st.markdown(f"**Faithfulness Score:** `{trace_data['faithfulness']}`")
-                        if sources:
-                            st.markdown("**Sources:**")
-                            for s in sources:
-                                st.markdown(f"- {s}")
-                        else:
-                            st.markdown("**Sources:** None")
-                        st.markdown(f"**Eval Retries:** `{trace_data['eval_retries']}`")
-
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": display,
-                        "trace": trace_data
-                    })
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                st.metric("Faithfulness", str(faithfulness))
+            
+            st.markdown("#### Sources Used")
+            sources = trace.get('sources', [])
+            if sources:
+                for i, source in enumerate(sources, 1):
+                    st.write(f"**{i}. {source}**")
+            else:
+                st.write("No specific sources referenced")
+            
+            st.markdown("#### Processing Info")
+            st.write(f"**Retries:** {trace.get('eval_retries', 0)}")
+        else:
+            st.info("Processing details will appear here")
+    else:
+        st.info("💡 Start a conversation to see processing details")

@@ -164,6 +164,8 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 if 'current_trace' not in st.session_state:
     st.session_state.current_trace = None
+if 'pending_query' not in st.session_state:
+    st.session_state.pending_query = None
 
 # ─── Deadline Countdown ───
 def get_deadline_info():
@@ -230,89 +232,102 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ─── Suggestion Cards ───
-st.markdown("""
-<div class="suggestion-row">
-    <div class="suggestion-card">
-        <h3>🏗️ Architecture & Theory</h3>
-        <p>Try: Explain how transformer architecture and attention mechanisms work in LLMs.</p>
-    </div>
-    <div class="suggestion-card">
-        <h3>🎯 Practical Applications</h3>
-        <p>Try: What are the real-world applications of large language models?</p>
-    </div>
-    <div class="suggestion-card">
-        <h3>🚀 LLM Trends & Future</h3>
-        <p>Try: What are the emerging trends and future direction of LLMs?</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# ─── Suggestion Cards with Functionality ───
+if not st.session_state.messages:  # Only show if no conversation started
+    st.markdown("#### 🎯 Quick Start Examples:")
+    
+    suggestions = [
+        {
+            "title": "🏗️ Architecture & Theory",
+            "query": "Explain how transformer architecture and attention mechanisms work in LLMs.",
+            "key": "arch"
+        },
+        {
+            "title": "🎯 Practical Applications", 
+            "query": "What are the real-world applications of large language models?",
+            "key": "app"
+        },
+        {
+            "title": "🚀 LLM Trends & Future",
+            "query": "What are the emerging trends and future direction of LLMs?",
+            "key": "trends"
+        }
+    ]
+    
+    cols = st.columns(3, gap="small")
+    for col, sugg in zip(cols, suggestions):
+        with col:
+            if st.button(f"{sugg['title']}\n\n💬 Try →", use_container_width=True, key=f"sugg_{sugg['key']}"):
+                # Store the suggestion query and trigger processing
+                st.session_state.pending_query = sugg['query']
+                st.rerun()
 
 # ─── Two Column Layout: Chat + Processing ───
 col_chat, col_process = st.columns([1.2, 1], gap="large")
 
 with col_chat:
-    st.markdown("### 💬 Conversation")
+    st.markdown("### 💬 Chat")
     
-    # Chat History
-    chat_container = st.container(height=400)
-    with chat_container:
-        for msg in st.session_state.messages:
-            avatar = "🤖" if msg['role'] == "assistant" else "👤"
-            with st.chat_message(msg['role'], avatar=avatar):
-                st.markdown(msg['content'])
+    # Chat History Display
+    for msg in st.session_state.messages:
+        avatar = "🤖" if msg['role'] == "assistant" else "👤"
+        with st.chat_message(msg['role'], avatar=avatar):
+            st.markdown(msg['content'])
     
     # Chat Input
     st.markdown("---")
-    if prompt := st.chat_input("Ask me about LLMs, training, evaluation, applications, or future trends..."):
+    
+    # Handle pending query from suggestion buttons
+    if 'pending_query' in st.session_state and st.session_state.pending_query:
+        prompt = st.session_state.pending_query
+        st.session_state.pending_query = None
+    else:
+        prompt = st.chat_input("Ask me about LLMs...")
+    
+    if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with chat_container:
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(prompt)
+        with st.chat_message("user", avatar="👤"):
+            st.markdown(prompt)
 
-        with chat_container:
-            with st.chat_message("assistant", avatar="🤖"):
-                with st.spinner("Processing..."):
-                    if not st.session_state.groq_api_key:
-                        st.error("❌ Please configure your GROQ API Key in settings.")
-                    elif not app:
-                        st.error("❌ Failed to initialize the AI system.")
-                    else:
-                        try:
-                            result = app.invoke(
-                                {"question": prompt},
-                                config={"configurable": {"thread_id": st.session_state.thread_id}}
-                            )
-                            answer = result.get('answer', "I couldn't generate an answer.")
-                            sources = result.get('sources', [])
+        with st.chat_message("assistant", avatar="🤖"):
+            with st.spinner("Processing..."):
+                if not st.session_state.groq_api_key:
+                    st.error("❌ Please configure your GROQ API Key.")
+                elif not app:
+                    st.error("❌ Failed to initialize AI system.")
+                else:
+                    try:
+                        result = app.invoke(
+                            {"question": prompt},
+                            config={"configurable": {"thread_id": st.session_state.thread_id}}
+                        )
+                        answer = result.get('answer', "I couldn't generate an answer.")
+                        sources = result.get('sources', [])
 
-                            # Display answer without sources in chat
-                            st.markdown(answer)
+                        st.markdown(answer)
 
-                            trace_data = {
-                                'route': result.get('route'),
-                                'faithfulness': result.get('faithfulness'),
-                                'sources': sources,
-                                'eval_retries': result.get('eval_retries', 0)
-                            }
+                        trace_data = {
+                            'route': result.get('route'),
+                            'faithfulness': result.get('faithfulness'),
+                            'sources': sources,
+                            'eval_retries': result.get('eval_retries', 0)
+                        }
 
-                            # Store trace for right panel
-                            st.session_state.current_trace = trace_data
+                        st.session_state.current_trace = trace_data
 
-                            st.session_state.messages.append({
-                                "role": "assistant",
-                                "content": answer,
-                                "trace": trace_data
-                            })
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error: {str(e)}")
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": answer,
+                            "trace": trace_data
+                        })
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
 
 with col_process:
     st.markdown("### 🔍 Processing Details")
     
     if st.session_state.current_trace or (st.session_state.messages and st.session_state.messages[-1]['role'] == 'assistant'):
-        # Get the latest trace
         trace = st.session_state.current_trace
         if not trace and st.session_state.messages:
             trace = st.session_state.messages[-1].get('trace', {})
@@ -342,4 +357,4 @@ with col_process:
         else:
             st.info("Processing details will appear here")
     else:
-        st.info("💡 Start a conversation to see processing details")
+        st.info("💡 Start a conversation or click a suggestion")

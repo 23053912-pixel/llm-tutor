@@ -49,6 +49,12 @@ streamlit_config.yml
 chroma_data/
 *.chroma
 
+# Guidance & Reference Documents (keep locally, exclude from repo)
+*.docx
+*.pdf
+!.github/**/*.pdf
+*.doc
+
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb

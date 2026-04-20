@@ -4,19 +4,21 @@ import uuid
 from datetime import datetime, timezone, timedelta
 
 # Load API key from Streamlit secrets (or fallback to environment for local .env)
+api_key = ""
 try:
     # First try Streamlit secrets (for deployed apps)
     api_key = st.secrets.get("GROQ_API_KEY", "")
-    if not api_key:
-        # Fallback to environment variable (for local .env)
+except Exception:
+    pass
+
+if not api_key:
+    # Fallback to environment variable (for local .env)
+    try:
         from dotenv import load_dotenv
         load_dotenv()
         api_key = os.environ.get('GROQ_API_KEY', '')
-except Exception:
-    # If secrets not configured, try .env
-    from dotenv import load_dotenv
-    load_dotenv()
-    api_key = os.environ.get('GROQ_API_KEY', '')
+    except Exception:
+        pass
 
 # Set the API key to environment for downstream use
 if api_key:
@@ -34,6 +36,29 @@ st.set_page_config(
     page_icon="🧠",
     layout="wide"
 )
+
+# ─── Check for API Key ───
+if not api_key:
+    st.error("""
+    ### ⚠️ API Key Not Configured
+    
+    The application requires a Groq API key to function.
+    
+    **For Streamlit Cloud:**
+    1. Go to your deployment settings
+    2. Click "Secrets" and add:
+       ```
+       GROQ_API_KEY = "your_api_key_here"
+       ```
+    3. Redeploy the app
+    
+    **For Local Use:**
+    1. Create `.streamlit/secrets.toml` with your API key
+    2. Or create `.env` file with `GROQ_API_KEY=your_api_key`
+    
+    Get a free API key: https://console.groq.com
+    """)
+    st.stop()
 
 # ─── Custom CSS to match the dark premium UI ───
 st.markdown("""

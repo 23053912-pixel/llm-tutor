@@ -121,12 +121,16 @@ st.markdown("""
 
 # ─── System Init (cached) ───
 @st.cache_resource
-def load_system(api_key=''):
+def load_system():
+    """Load the AI system once and cache it"""
+    api_key = os.environ.get('GROQ_API_KEY', '')
     if not api_key:
         return None, len(documents)
     
+    # Load embedder once
     embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
+    # Create ChromaDB client
     chroma_client = chromadb.Client()
     try:
         chroma_client.delete_collection(name="course_kb")
@@ -134,11 +138,13 @@ def load_system(api_key=''):
         pass
     collection = chroma_client.create_collection(name="course_kb")
 
+    # Prepare data
     texts = [doc['text'] for doc in documents]
     ids = [doc['id'] for doc in documents]
     metadatas = [{'topic': doc['topic']} for doc in documents]
     embeddings = embedder.encode(texts).tolist()
 
+    # Add to collection
     collection.add(
         documents=texts,
         embeddings=embeddings,
@@ -146,6 +152,7 @@ def load_system(api_key=''):
         ids=ids
     )
 
+    # Initialize LLM
     try:
         llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=api_key)
     except Exception as e:
@@ -155,7 +162,7 @@ def load_system(api_key=''):
     app = create_agent(llm, embedder, collection)
     return app, len(documents)
 
-app, kb_count = load_system(st.session_state.groq_api_key)
+app, kb_count = load_system()
 
 # ─── Session State ───
 if 'thread_id' not in st.session_state:
@@ -258,9 +265,8 @@ if not st.session_state.messages:  # Only show if no conversation started
     for col, sugg in zip(cols, suggestions):
         with col:
             if st.button(f"{sugg['title']}\n\n💬 Try →", use_container_width=True, key=f"sugg_{sugg['key']}"):
-                # Store the suggestion query and trigger processing
+                # Store the suggestion query - Streamlit auto-reruns on state change
                 st.session_state.pending_query = sugg['query']
-                st.rerun()
 
 # ─── Chat Layout ───
 st.markdown("### 💬 Chat")
@@ -287,36 +293,39 @@ if prompt:
         st.markdown(prompt)
 
     with st.chat_message("assistant", avatar="🤖"):
-        with st.spinner("Processing..."):
-            if not st.session_state.groq_api_key:
-                st.error("❌ Please configure your GROQ API Key.")
-            elif not app:
-                st.error("❌ Failed to initialize AI system.")
-            else:
-                try:
-                    result = app.invoke(
-                        {"question": prompt},
-                        config={"configurable": {"thread_id": st.session_state.thread_id}}
-                    )
-                    answer = result.get('answer', "I couldn't generate an answer.")
-                    sources = result.get('sources', [])
+        placeholder = st.empty()
+        
+        if not st.session_state.groq_api_key:
+            placeholder.error("❌ Please configure your GROQ API Key.")
+        elif not app:
+            placeholder.error("❌ Failed to initialize AI system.")
+        else:
+            try:
+                with placeholder.container():
+                    st.spinner("Processing...")
+                
+                result = app.invoke(
+                    {"question": prompt},
+                    config={"configurable": {"thread_id": st.session_state.thread_id}}
+                )
+                answer = result.get('answer', "I couldn't generate an answer.")
+                sources = result.get('sources', [])
 
-                    st.markdown(answer)
+                placeholder.markdown(answer)
 
-                    trace_data = {
-                        'route': result.get('route'),
-                        'faithfulness': result.get('faithfulness'),
-                        'sources': sources,
-                        'eval_retries': result.get('eval_retries', 0)
-                    }
+                trace_data = {
+                    'route': result.get('route'),
+                    'faithfulness': result.get('faithfulness'),
+                    'sources': sources,
+                    'eval_retries': result.get('eval_retries', 0)
+                }
 
-                    st.session_state.current_trace = trace_data
+                st.session_state.current_trace = trace_data
 
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": answer,
-                        "trace": trace_data
-                    })
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": answer,
+                    "trace": trace_data
+                })
+            except Exception as e:
+                placeholder.error(f"Error: {str(e)}")

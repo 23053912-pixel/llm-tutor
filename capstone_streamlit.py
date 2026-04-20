@@ -262,99 +262,61 @@ if not st.session_state.messages:  # Only show if no conversation started
                 st.session_state.pending_query = sugg['query']
                 st.rerun()
 
-# ─── Two Column Layout: Chat + Processing ───
-col_chat, col_process = st.columns([1.2, 1], gap="large")
+# ─── Chat Layout ───
+st.markdown("### 💬 Chat")
 
-with col_chat:
-    st.markdown("### 💬 Chat")
-    
-    # Chat History Display
-    for msg in st.session_state.messages:
-        avatar = "🤖" if msg['role'] == "assistant" else "👤"
-        with st.chat_message(msg['role'], avatar=avatar):
-            st.markdown(msg['content'])
-    
-    # Chat Input
-    st.markdown("---")
-    
-    # Handle pending query from suggestion buttons
-    if 'pending_query' in st.session_state and st.session_state.pending_query:
-        prompt = st.session_state.pending_query
-        st.session_state.pending_query = None
-    else:
-        prompt = st.chat_input("Ask me about LLMs...")
-    
-    if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user", avatar="👤"):
-            st.markdown(prompt)
+# Chat History Display
+for msg in st.session_state.messages:
+    avatar = "🤖" if msg['role'] == "assistant" else "👤"
+    with st.chat_message(msg['role'], avatar=avatar):
+        st.markdown(msg['content'])
 
-        with st.chat_message("assistant", avatar="🤖"):
-            with st.spinner("Processing..."):
-                if not st.session_state.groq_api_key:
-                    st.error("❌ Please configure your GROQ API Key.")
-                elif not app:
-                    st.error("❌ Failed to initialize AI system.")
-                else:
-                    try:
-                        result = app.invoke(
-                            {"question": prompt},
-                            config={"configurable": {"thread_id": st.session_state.thread_id}}
-                        )
-                        answer = result.get('answer', "I couldn't generate an answer.")
-                        sources = result.get('sources', [])
+# Chat Input
+st.markdown("---")
 
-                        st.markdown(answer)
+# Handle pending query from suggestion buttons
+if 'pending_query' in st.session_state and st.session_state.pending_query:
+    prompt = st.session_state.pending_query
+    st.session_state.pending_query = None
+else:
+    prompt = st.chat_input("Ask me about LLMs...")
 
-                        trace_data = {
-                            'route': result.get('route'),
-                            'faithfulness': result.get('faithfulness'),
-                            'sources': sources,
-                            'eval_retries': result.get('eval_retries', 0)
-                        }
+if prompt:
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user", avatar="👤"):
+        st.markdown(prompt)
 
-                        st.session_state.current_trace = trace_data
-
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": answer,
-                            "trace": trace_data
-                        })
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
-
-with col_process:
-    st.markdown("### 🔍 Processing Details")
-    
-    if st.session_state.current_trace or (st.session_state.messages and st.session_state.messages[-1]['role'] == 'assistant'):
-        trace = st.session_state.current_trace
-        if not trace and st.session_state.messages:
-            trace = st.session_state.messages[-1].get('trace', {})
-        
-        if trace:
-            st.markdown("#### Information Retrieved")
-            st.info(trace.get('route', 'Processing...'))
-            
-            st.markdown("#### Confidence Score")
-            faithfulness = trace.get('faithfulness', 'N/A')
-            if isinstance(faithfulness, (int, float)):
-                score = min(100, int(faithfulness * 100)) if faithfulness <= 1 else int(faithfulness)
-                st.metric("Faithfulness", f"{score}%")
+    with st.chat_message("assistant", avatar="🤖"):
+        with st.spinner("Processing..."):
+            if not st.session_state.groq_api_key:
+                st.error("❌ Please configure your GROQ API Key.")
+            elif not app:
+                st.error("❌ Failed to initialize AI system.")
             else:
-                st.metric("Faithfulness", str(faithfulness))
-            
-            st.markdown("#### Sources Used")
-            sources = trace.get('sources', [])
-            if sources:
-                for i, source in enumerate(sources, 1):
-                    st.write(f"**{i}. {source}**")
-            else:
-                st.write("No specific sources referenced")
-            
-            st.markdown("#### Processing Info")
-            st.write(f"**Retries:** {trace.get('eval_retries', 0)}")
-        else:
-            st.info("Processing details will appear here")
-    else:
-        st.info("💡 Start a conversation or click a suggestion")
+                try:
+                    result = app.invoke(
+                        {"question": prompt},
+                        config={"configurable": {"thread_id": st.session_state.thread_id}}
+                    )
+                    answer = result.get('answer', "I couldn't generate an answer.")
+                    sources = result.get('sources', [])
+
+                    st.markdown(answer)
+
+                    trace_data = {
+                        'route': result.get('route'),
+                        'faithfulness': result.get('faithfulness'),
+                        'sources': sources,
+                        'eval_retries': result.get('eval_retries', 0)
+                    }
+
+                    st.session_state.current_trace = trace_data
+
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": answer,
+                        "trace": trace_data
+                    })
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")

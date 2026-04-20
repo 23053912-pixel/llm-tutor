@@ -2,6 +2,8 @@
 
 An AI-powered educational chatbot built with **LangGraph**, **Retrieval-Augmented Generation (RAG)**, and **Groq API** that teaches comprehensive knowledge about Large Language Models.
 
+**Created by:** [**Prashant Bhandari**](https://github.com/23053912-pixel)
+
 ## ✨ Features
 
 - **Interactive Learning**: Multi-turn conversations with an intelligent LLM tutor
@@ -41,7 +43,7 @@ An AI-powered educational chatbot built with **LangGraph**, **Retrieval-Augmente
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/llm-tutor.git
+   git clone https://github.com/23053912-pixel/llm-tutor.git
    cd llm-tutor
    ```
 
@@ -318,16 +320,31 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 ## 📞 Support & Contact
 
+- **GitHub**: [@23053912-pixel](https://github.com/23053912-pixel)
 - **Issues**: Open a GitHub issue for bugs
 - **Discussions**: Use GitHub Discussions for questions
-- **Email**: your-email@example.com
+
+## 👨‍💻 Developer
+
+**Prashant Bhandari** - AI Engineer & Software Developer
+- 🔗 GitHub: [@23053912-pixel](https://github.com/23053912-pixel)
+- 💼 Working on: Agentic AI, LLMs, RAG systems, and educational platforms
+- 🎯 Focus: Building intelligent systems that help people learn
+
+**This project demonstrates:**
+- Advanced LangGraph state machine design
+- RAG pipeline implementation
+- Streamlit application development
+- Production-ready deployment on Streamlit Cloud
+- Professional Python project structure
 
 ## 🙏 Acknowledgments
 
 - Built with [LangGraph](https://python.langchain.com/docs/langgraph/) for agentic workflows
 - Powered by [Groq](https://groq.com) for fast LLM inference
-- Knowledge base concepts from [Agentic AI Course](https://example.com)
 - Embeddings via [Sentence Transformers](https://www.sbert.net/)
+- Inspired by prompt engineering and RAG best practices
+- UI built with [Streamlit](https://streamlit.io/)
 
 ## 🚀 Roadmap
 

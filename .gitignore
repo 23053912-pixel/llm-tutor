@@ -1,0 +1,91 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Streamlit
+.streamlit/
+.streamlit/cache/
+.streamlit/logs/
+streamlit_config.yml
+
+# ChromaDB
+chroma_data/
+*.chroma
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Node (if frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Project specific
+old_files/
+backup/
+temp/
+test_results/
+*.pkl
+*.chroma
+chroma_db/
+
+# Sensitive files
+.env
+secrets.json
+config.local.json
+api_keys.txt
+
+# Documentation builds
+docs/_build/
+site/
+
+# IDE settings (but keep project-level)
+!.vscode/settings.json
+!.idea/runConfigurations/
+
+# Allow requirement files
+!requirements.txt
+!requirements-dev.txt

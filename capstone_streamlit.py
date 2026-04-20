@@ -239,6 +239,48 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# ─── Helper function to process queries ───
+def process_query(prompt):
+    """Process a query and add response to chat"""
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    
+    with st.chat_message("user", avatar="👤"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant", avatar="🤖"):
+        if not st.session_state.groq_api_key:
+            st.error("❌ Please configure your GROQ API Key.")
+        elif not app:
+            st.error("❌ Failed to initialize AI system.")
+        else:
+            try:
+                with st.spinner("Processing..."):
+                    result = app.invoke(
+                        {"question": prompt},
+                        config={"configurable": {"thread_id": st.session_state.thread_id}}
+                    )
+                    answer = result.get('answer', "I couldn't generate an answer.")
+                    sources = result.get('sources', [])
+
+                    st.markdown(answer)
+
+                    trace_data = {
+                        'route': result.get('route'),
+                        'faithfulness': result.get('faithfulness'),
+                        'sources': sources,
+                        'eval_retries': result.get('eval_retries', 0)
+                    }
+
+                    st.session_state.current_trace = trace_data
+
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": answer,
+                        "trace": trace_data
+                    })
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+
 # ─── Suggestion Cards with Functionality ───
 if not st.session_state.messages:  # Only show if no conversation started
     st.markdown("#### 🎯 Quick Start Examples:")
@@ -265,8 +307,8 @@ if not st.session_state.messages:  # Only show if no conversation started
     for col, sugg in zip(cols, suggestions):
         with col:
             if st.button(f"{sugg['title']}\n\n💬 Try →", use_container_width=True, key=f"sugg_{sugg['key']}"):
-                # Store the suggestion query - Streamlit auto-reruns on state change
-                st.session_state.pending_query = sugg['query']
+                process_query(sugg['query'])
+                st.rerun()
 
 # ─── Chat Layout ───
 st.markdown("### 💬 Chat")
@@ -280,52 +322,5 @@ for msg in st.session_state.messages:
 # Chat Input
 st.markdown("---")
 
-# Handle pending query from suggestion buttons
-if 'pending_query' in st.session_state and st.session_state.pending_query:
-    prompt = st.session_state.pending_query
-    st.session_state.pending_query = None
-else:
-    prompt = st.chat_input("Ask me about LLMs...")
-
-if prompt:
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="👤"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant", avatar="🤖"):
-        placeholder = st.empty()
-        
-        if not st.session_state.groq_api_key:
-            placeholder.error("❌ Please configure your GROQ API Key.")
-        elif not app:
-            placeholder.error("❌ Failed to initialize AI system.")
-        else:
-            try:
-                with placeholder.container():
-                    st.spinner("Processing...")
-                
-                result = app.invoke(
-                    {"question": prompt},
-                    config={"configurable": {"thread_id": st.session_state.thread_id}}
-                )
-                answer = result.get('answer', "I couldn't generate an answer.")
-                sources = result.get('sources', [])
-
-                placeholder.markdown(answer)
-
-                trace_data = {
-                    'route': result.get('route'),
-                    'faithfulness': result.get('faithfulness'),
-                    'sources': sources,
-                    'eval_retries': result.get('eval_retries', 0)
-                }
-
-                st.session_state.current_trace = trace_data
-
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": answer,
-                    "trace": trace_data
-                })
-            except Exception as e:
-                placeholder.error(f"Error: {str(e)}")
+if prompt := st.chat_input("Ask me about LLMs..."):
+    process_query(prompt)

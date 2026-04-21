@@ -68,11 +68,27 @@ st.markdown("""
     /* Hide default Streamlit elements */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
-    footer {visibility: hidden;}
+    footer {visibility: hidden; display: none !important;}
+    
+    /* Remove any dark sections */
+    [data-testid="stAppViewContainer"] {
+        background-color: #ffffff !important;
+    }
+    
+    /* Full page white background */
+    div[class*="stApp"] {
+        background-color: #ffffff !important;
+    }
 
     /* Light background - study friendly */
     .stApp {
         background-color: #f8f9fa;
+        background: #f8f9fa !important;
+    }
+    
+    /* Ensure entire app is light */
+    html, body {
+        background-color: #ffffff !important;
     }
 
     /* Main container */
@@ -233,6 +249,26 @@ st.markdown("""
         font-size: 14px;
         color: #2d3748;
         font-weight: 500;
+    }
+
+    /* Chat input area - white background */
+    .stChatInputContainer {
+        background-color: #ffffff !important;
+    }
+    
+    /* Bottom input section - white */
+    [data-testid="stBottomSessionInfo"] {
+        background-color: #ffffff !important;
+    }
+    
+    /* Chat input field - white background */
+    .stChatInput {
+        background-color: #ffffff !important;
+    }
+    
+    /* Ensure bottom area is light */
+    section:last-child {
+        background-color: #ffffff !important;
     }
 
     /* Dark mode styling */

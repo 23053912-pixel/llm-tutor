@@ -79,6 +79,15 @@ st.markdown("""
     .main {
         background-color: #ffffff;
     }
+    
+    /* Ensure all text is visible - black on light mode */
+    .main p, .main div, .main span, .main li {
+        color: #000000 !important;
+    }
+    
+    .stMarkdown p, .stMarkdown div, .stMarkdown span, .stMarkdown li {
+        color: #000000 !important;
+    }
 
     /* Hero card - soft and professional */
     .hero-card {
@@ -142,11 +151,19 @@ st.markdown("""
     section[data-testid="stSidebar"] .stMarkdown h1,
     section[data-testid="stSidebar"] .stMarkdown h2,
     section[data-testid="stSidebar"] .stMarkdown h3 {
-        color: #2d3748;
+        color: #000000 !important;
     }
     section[data-testid="stSidebar"] .stMarkdown p,
-    section[data-testid="stSidebar"] .stMarkdown li {
-        color: #4a5568;
+    section[data-testid="stSidebar"] .stMarkdown li,
+    section[data-testid="stSidebar"] .stMarkdown div,
+    section[data-testid="stSidebar"] .stMarkdown span {
+        color: #000000 !important;
+    }
+    section[data-testid="stSidebar"] p {
+        color: #000000 !important;
+    }
+    section[data-testid="stSidebar"] div {
+        color: #000000 !important;
     }
 
     /* Chat messages - readable and clean */
@@ -155,9 +172,10 @@ st.markdown("""
     }
 
     /* Text styling for better readability */
-    body, p, li, div {
+    body, p, li, div, span, h1, h2, h3, h4, h5, h6 {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
         letter-spacing: 0.3px;
+        color: #000000 !important;
     }
 
     /* Links - soft blue */

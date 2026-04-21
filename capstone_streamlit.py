@@ -216,6 +216,51 @@ st.markdown("""
         color: #2d3748;
         font-weight: 500;
     }
+
+    /* Dark mode styling */
+    [data-testid="stApp"][data-theme="dark"] {
+        background-color: #1a1a1a;
+    }
+    
+    [data-theme="dark"] .stApp {
+        background-color: #0d0d0d;
+    }
+
+    [data-theme="dark"] .main {
+        background-color: #1a1a1a;
+    }
+
+    [data-theme="dark"] .hero-card {
+        background: linear-gradient(135deg, #2d4058 0%, #3d5a75 100%);
+    }
+
+    [data-theme="dark"] .stChatMessage {
+        background-color: #2a2a2a;
+    }
+
+    [data-theme="dark"] p, [data-theme="dark"] div, [data-theme="dark"] li {
+        color: #e0e0e0;
+    }
+
+    [data-theme="dark"] .stButton > button {
+        background-color: #3d5a75;
+    }
+
+    [data-theme="dark"] .stButton > button:hover {
+        background-color: #4a6fa5;
+    }
+
+    [data-theme="dark"] .stTextInput > div > div > input,
+    [data-theme="dark"] .stTextArea > div > div > textarea {
+        background-color: #2a2a2a !important;
+        color: #e0e0e0 !important;
+        border-color: #404040 !important;
+    }
+
+    [data-theme="dark"] code {
+        background-color: #2a2a2a !important;
+        color: #a0d0ff !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -319,12 +364,51 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
+    st.markdown("### 🌓 Theme")
+    theme = st.selectbox(
+        "Select theme:",
+        ["Light Mode ☀️", "Dark Mode 🌙"],
+        key="theme_selector",
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("---")
+    st.markdown("### 🔗 Connect")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("[GitHub 👨‍💻](https://github.com/23053912-pixel/llm-tutor)")
+    with col2:
+        st.markdown("[Live API 🚀](https://console.groq.com)")
+    
+    st.markdown("---")
     st.markdown("### ✅ Status")
     
     if api_key:
         st.success("✅ API Key Configured\n\nReady to use!")
     else:
         st.error("❌ API Key Missing\n\nPlease set GROQ_API_KEY in .env file")
+
+# ─── Apply Theme ───
+if 'theme_selector' in st.session_state:
+    theme = st.session_state.theme_selector
+    if "Dark Mode" in theme:
+        # Apply dark mode styles
+        st.markdown("""
+        <style>
+            .stApp {
+                background-color: #0d0d0d;
+            }
+            .main {
+                background-color: #1a1a1a;
+            }
+            .stMarkdown, .stText {
+                color: #e0e0e0 !important;
+            }
+            .hero-card {
+                background: linear-gradient(135deg, #2d4058 0%, #3d5a75 100%) !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
 
 # ─── Hero Card ───
 deadline_text = get_deadline_info()
